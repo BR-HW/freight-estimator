@@ -18,95 +18,119 @@
 <script type="text/babel">
 const { useState, useMemo } = React;
 
-const RAW_DATA = [
-  // AF00070639 - 1/17/2026
-  { shipmentId:"AF00070639", date:"1/17/2026", category:"Bra - Underwire", units:3500,  cartons:201, totalCartons:403, totalCost:12654.20, chargeableKg:2554.5 },
-  { shipmentId:"AF00070639", date:"1/17/2026", category:"Bralette",        units:11530, cartons:169, totalCartons:403, totalCost:12654.20, chargeableKg:2554.5 },
-  { shipmentId:"AF00070639", date:"1/17/2026", category:"Underwear",       units:3950,  cartons:33,  totalCartons:403, totalCost:12654.20, chargeableKg:2554.5 },
-  // AF00068219 - 1/27/2026
-  { shipmentId:"AF00068219", date:"1/27/2026", category:"Bra - Underwire", units:4000,  cartons:208, totalCartons:411, totalCost:15071.42, chargeableKg:2603.5 },
-  { shipmentId:"AF00068219", date:"1/27/2026", category:"Bralette",        units:11904, cartons:196, totalCartons:411, totalCost:15071.42, chargeableKg:2603.5 },
-  { shipmentId:"AF00068219", date:"1/27/2026", category:"Underwear",       units:780,   cartons:7,   totalCartons:411, totalCost:15071.42, chargeableKg:2603.5 },
-  // AF00068105 - 1/13/2026
-  { shipmentId:"AF00068105", date:"1/13/2026", category:"Bra - Underwire", units:1000,  cartons:56,  totalCartons:323, totalCost:11827.08, chargeableKg:2032.0 },
-  { shipmentId:"AF00068105", date:"1/13/2026", category:"Bralette",        units:2760,  cartons:41,  totalCartons:323, totalCost:11827.08, chargeableKg:2032.0 },
-  { shipmentId:"AF00068105", date:"1/13/2026", category:"Underwear",       units:3540,  cartons:36,  totalCartons:323, totalCost:11827.08, chargeableKg:2032.0 },
-  { shipmentId:"AF00068105", date:"1/13/2026", category:"Bra - Wireless",  units:3549,  cartons:190, totalCartons:323, totalCost:11827.08, chargeableKg:2032.0 },
-  // AF00070295 - 11/28/2025
-  { shipmentId:"AF00070295", date:"11/28/2025", category:"Bralette",       units:2400,  cartons:92,  totalCartons:104, totalCost:3406.42,  chargeableKg:657.0 },
-  { shipmentId:"AF00070295", date:"11/28/2025", category:"Underwear",      units:1428,  cartons:12,  totalCartons:104, totalCost:3406.42,  chargeableKg:657.0 },
-  // AF00070807 - 2/20/2026
-  { shipmentId:"AF00070807", date:"2/20/2026", category:"Bra - Underwire", units:4414,  cartons:247, totalCartons:536, totalCost:19602.92, chargeableKg:3415.0 },
-  { shipmentId:"AF00070807", date:"2/20/2026", category:"Bra - Wireless",  units:4152,  cartons:222, totalCartons:536, totalCost:19602.92, chargeableKg:3415.0 },
-  { shipmentId:"AF00070807", date:"2/20/2026", category:"Bralette",        units:3585,  cartons:50,  totalCartons:536, totalCost:19602.92, chargeableKg:3415.0 },
-  { shipmentId:"AF00070807", date:"2/20/2026", category:"Underwear",       units:1528,  cartons:17,  totalCartons:536, totalCost:19602.92, chargeableKg:3415.0 },
+// ─── DATA ────────────────────────────────────────────────────────────
+// One entry per shipment. lines = [category, units, cartons]
+// To add a shipment, copy a line below and edit it. Dates are YYYY-MM-DD.
+const SHIPMENTS = [
+  { id:"AF00070295", date:"2025-11-28", cost:3406.42,  kg:657.0,  cartons:104, lines:[["Bralette",2400,92],["Underwear",1428,12]] },
+  { id:"AF00068105", date:"2026-01-13", cost:11827.08, kg:2032.0, cartons:323, lines:[["Bra - Underwire",1000,56],["Bralette",2760,41],["Underwear",3540,36],["Bra - Wireless",3549,190]] },
+  { id:"AF00070639", date:"2026-01-17", cost:12654.20, kg:2554.5, cartons:403, lines:[["Bra - Underwire",3500,201],["Bralette",11530,169],["Underwear",3950,33]] },
+  { id:"AF00068219", date:"2026-01-27", cost:15071.42, kg:2603.5, cartons:411, lines:[["Bra - Underwire",4000,208],["Bralette",11904,196],["Underwear",780,7]] },
+  { id:"AF00070807", date:"2026-02-20", cost:19602.92, kg:3415.0, cartons:536, lines:[["Bra - Underwire",4414,247],["Bra - Wireless",4152,222],["Bralette",3585,50],["Underwear",1528,17]] },
+  { id:"AF00070995", date:"2026-04-01", cost:4463.78,  kg:565.0,  cartons:69,  lines:[["Apparel/Sleep",1687,69]] },
+  { id:"AF00071057", date:"2026-04-06", cost:4543.10,  kg:605.0,  cartons:74,  lines:[["Apparel/Sleep",1551,74]] },
+  { id:"AF00071157", date:"2026-04-23", cost:4844.85,  kg:470.0,  cartons:87,  lines:[["Apparel/Sleep",860,32],["Bralette",3320,50],["Underwear",475,5]] },
+  { id:"AF00071215", date:"2026-05-06", cost:4634.14,  kg:575.0,  cartons:90,  lines:[["Bralette",4698,77],["Underwear",1450,13]] },
+  { id:"AF00071328", date:"2026-06-02", cost:2823.54,  kg:314.0,  cartons:33,  lines:[["Apparel/Sleep",1884,33]] },
+  { id:"AF00071381", date:"2026-06-09", cost:2530.92,  kg:294.5,  cartons:13,  lines:[["Apparel/Sleep",1825,13]] },
+  { id:"AF00071650", date:"2026-07-08", cost:2249.27,  kg:250.0,  cartons:39,  lines:[["Underwear",3050,30],["Bralette",300,9]] },
+  { id:"AF00071921", date:"2026-08-05", cost:439.70,   kg:63.5,   cartons:10,  lines:[["Bralette",571,10]] },
+  { id:"AF00071920", date:"2026-08-05", cost:2088.80,  kg:231.5,  cartons:37,  lines:[["Underwear",1475,11],["Bralette",1950,26]] },
+  { id:"AF00071991", date:"2026-08-11", cost:5967.41,  kg:880.0,  cartons:141, lines:[["Underwear",525,4],["Bralette",2700,48],["Bra - Underwire",1500,89]] },
+  { id:"AF00072046", date:"2026-08-18", cost:1132.96,  kg:102.5,  cartons:16,  lines:[["Underwear",2350,16]] },
+  { id:"AF00072074", date:"2026-08-20", cost:9419.09,  kg:1421.5, cartons:223, lines:[["Underwear",6755,55],["Bra - Underwire",500,32],["Bralette",7180,136]] },
+  { id:"AF00072312", date:"2026-09-24", cost:2643.29,  kg:320.0,  cartons:50,  lines:[["Underwear",2000,16],["Bralette",2920,34]] },
+  { id:"AF00072541", date:"2026-10-26", cost:1322.99,  kg:126.0,  cartons:13,  lines:[["Underwear",800,13]] },
 ];
 
-const CATEGORIES = ["Bra - Underwire","Bra - Wireless","Bralette","Underwear"];
+const CATEGORIES = ["Bra - Underwire","Bra - Wireless","Bralette","Underwear","Apparel/Sleep"];
 
-function calcStats() {
-  const byCat = {};
-  RAW_DATA.forEach(r => {
-    const share = r.cartons / r.totalCartons;
-    const ac = r.totalCost * share, ak = r.chargeableKg * share;
-    if (!byCat[r.category]) byCat[r.category] = [];
-    byCat[r.category].push({ units:r.units, cartons:r.cartons, ac, ak,
-      cpu: ac/r.units, cpc: ac/r.cartons, kpc: ak/r.cartons, upc: r.units/r.cartons });
+const ROWS = SHIPMENTS.flatMap(s => s.lines.map(([category,units,cartons]) => ({
+  shipmentId:s.id, date:s.date, category, units, cartons,
+  totalCartons:s.cartons, totalCost:s.cost, chargeableKg:s.kg,
+  allocCost: s.cost * cartons / s.cartons,
+  allocKg:   s.kg   * cartons / s.cartons,
+})));
+
+const LATEST = SHIPMENTS.reduce((m,s)=> s.date>m ? s.date : m, "0000-00-00");
+const cutoffFor = months => {
+  if (!months) return "0000-00-00";
+  const d = new Date(LATEST + "T00:00:00");
+  d.setMonth(d.getMonth() - months);
+  return d.toISOString().slice(0,10);
+};
+
+// Weighted stats per category (total / total, so big shipments count more)
+function calcStats(rows) {
+  const out = {};
+  rows.forEach(r => {
+    const o = out[r.category] || (out[r.category] = { cost:0, kg:0, units:0, cartons:0, n:0 });
+    o.cost += r.allocCost; o.kg += r.allocKg; o.units += r.units; o.cartons += r.cartons; o.n += 1;
   });
-  const s = {};
-  Object.entries(byCat).forEach(([cat,rows]) => {
-    const avg = k => rows.reduce((a,r)=>a+r[k],0)/rows.length;
-    s[cat] = { avgCPU:avg('cpu'), avgCPC:avg('cpc'), avgUPC:avg('upc'), avgKPC:avg('kpc'), samples:rows.length, rows };
+  Object.values(out).forEach(o => {
+    o.cpu = o.cost / o.units;
+    o.upc = o.units / o.cartons;
+    o.kpc = o.kg / o.cartons;
+    o.cpc = o.cost / o.cartons;
   });
-  return s;
+  return out;
 }
-
-const STATS = calcStats();
-
-const HIST_RATE = (() => {
-  const ships = {};
-  RAW_DATA.forEach(r => { ships[r.shipmentId] = { c:r.totalCost, k:r.chargeableKg }; });
-  const v = Object.values(ships);
-  return v.reduce((s,r)=>s+r.c,0) / v.reduce((s,r)=>s+r.k,0);
-})();
 
 const fmt  = n => n.toLocaleString("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2});
 const fmtN = (n,d=1) => n.toFixed(d);
+const fmtDate = iso => { const [y,m,d] = iso.split("-"); return `${+m}/${+d}/${y}`; };
 const card = { background:"#fff", borderRadius:12, padding:24, boxShadow:"0 1px 4px rgba(0,0,0,0.08)", marginBottom:16 };
 const pill = (label,active,onClick) =>
-  <button onClick={onClick} style={{padding:"5px 14px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:600,fontSize:12,background:active?"#4f46e5":"#f0f0f5",color:active?"#fff":"#666"}}>{label}</button>;
+  <button key={label} onClick={onClick} style={{padding:"5px 14px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:600,fontSize:12,background:active?"#4f46e5":"#f0f0f5",color:active?"#fff":"#666"}}>{label}</button>;
+
+const WINDOWS = [{label:"Last 3 months",months:3},{label:"Last 6 months",months:6},{label:"All time",months:0}];
 
 function App() {
   const [tab,setTab]           = useState("estimator");
-  const [inputs,setInputs]     = useState({"Bra - Underwire":"","Bra - Wireless":"","Bralette":"","Underwear":""});
+  const [inputs,setInputs]     = useState(Object.fromEntries(CATEGORIES.map(c=>[c,""])));
   const [slider,setSlider]     = useState(0);
   const [manRate,setManRate]   = useState("");
   const [rateMode,setRateMode] = useState("slider");
+  const [winMonths,setWinMonths] = useState(6);
 
-  const mult = useMemo(() => {
-    if (rateMode==="manual" && manRate!=="" && !isNaN(parseFloat(manRate)))
-      return parseFloat(manRate) / HIST_RATE;
+  const cutoff = cutoffFor(winMonths);
+  const winRows  = useMemo(()=>ROWS.filter(r=>r.date>=cutoff),[cutoff]);
+  const winShips = useMemo(()=>SHIPMENTS.filter(s=>s.date>=cutoff),[cutoff]);
+  const statsWin = useMemo(()=>calcStats(winRows),[winRows]);
+  const statsAll = useMemo(()=>calcStats(ROWS),[]);
+
+  const baseline = winShips.reduce((s,x)=>s+x.cost,0) / winShips.reduce((s,x)=>s+x.kg,0);
+
+  const getStats = cat => {
+    if (statsWin[cat]) return { s:statsWin[cat], fallback:false };
+    if (statsAll[cat]) return { s:statsAll[cat], fallback:true };
+    return null;
+  };
+
+  const mult = useMemo(()=>{
+    if (rateMode==="manual" && manRate!=="" && !isNaN(parseFloat(manRate))) return parseFloat(manRate)/baseline;
     return 1 + slider/100;
-  }, [rateMode, manRate, slider]);
+  },[rateMode,manRate,slider,baseline]);
 
   const pct    = ((mult-1)*100).toFixed(1);
   const adjCol = mult>1.005 ? "#c2410c" : mult<0.995 ? "#15803d" : "#555";
   const isAdj  = Math.abs(mult-1) > 0.005;
 
-  const est = useMemo(() => {
-    let total = 0;
-    const lines = CATEGORIES.map(cat => {
-      const units = parseInt(inputs[cat])||0, s = STATS[cat];
-      const base = units*s.avgCPU, adj = base*mult;
-      total += adj;
-      const cartons = units>0 ? Math.ceil(units/s.avgUPC) : 0;
-      const kg = cartons * s.avgKPC;
-      return { cat, units, base, adj, cartons, kg };
+  const est = useMemo(()=>{
+    let total=0, baseTotal=0;
+    const lines = CATEGORIES.map(cat=>{
+      const units = parseInt(inputs[cat])||0;
+      const g = getStats(cat);
+      if (!g || !units) return { cat, units, base:0, adj:0, cartons:0, kg:0 };
+      const base = units*g.s.cpu, adj = base*mult;
+      total += adj; baseTotal += base;
+      const cartons = Math.ceil(units/g.s.upc);
+      return { cat, units, base, adj, cartons, kg:cartons*g.s.kpc };
     });
-    return { lines, total, baseTotal: lines.reduce((s,l)=>s+l.base,0) };
-  }, [inputs, mult]);
+    return { lines, total, baseTotal };
+  },[inputs,mult,statsWin,statsAll]);
 
-  const hasUnits = CATEGORIES.some(c => parseInt(inputs[c])>0);
+  const hasUnits = CATEGORIES.some(c=>parseInt(inputs[c])>0);
 
   const tabBtn = t =>
     <button key={t} onClick={()=>setTab(t)} style={{padding:"8px 18px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:600,fontSize:13,
@@ -116,29 +140,33 @@ function App() {
     </button>;
 
   return (
-    <div style={{maxWidth:880,margin:"0 auto"}}>
+    <div style={{maxWidth:900,margin:"0 auto"}}>
 
-      {/* Header */}
       <div style={{marginBottom:20}}>
         <h1 style={{fontSize:22,fontWeight:700,color:"#1a1a2e"}}>✈️ Air Freight Cost Estimator</h1>
-        <p style={{color:"#666",fontSize:14,marginTop:4}}>Sri Lanka (CMB) → SLC · {RAW_DATA.length} data rows across 5 shipments · Chargeable weight basis</p>
+        <p style={{color:"#666",fontSize:14,marginTop:4}}>Sri Lanka (CMB) → SLC · {SHIPMENTS.length} shipments on file · latest {fmtDate(LATEST)}</p>
       </div>
 
-      {/* Tabs */}
       <div style={{display:"flex",gap:8,marginBottom:20,flexWrap:"wrap"}}>
         {["estimator","historical","methodology"].map(tabBtn)}
       </div>
 
+      {/* Data window */}
+      {tab!=="methodology" && <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+        <span style={{fontSize:12,color:"#888",fontWeight:600}}>DATA WINDOW</span>
+        {WINDOWS.map(w=>pill(w.label, winMonths===w.months, ()=>setWinMonths(w.months)))}
+        <span style={{fontSize:12,color:"#999"}}>· {winShips.length} shipments, baseline {fmt(baseline)}/kg</span>
+      </div>}
+
       {/* ── ESTIMATOR ── */}
       {tab==="estimator" && <>
 
-        {/* Market Adjustment */}
         <div style={{...card, border:"1.5px solid #e0e7ff"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <div>
               <span style={{fontWeight:700,fontSize:15,color:"#333"}}>📊 Market Rate Adjustment</span>
               <div style={{fontSize:12,color:"#888",marginTop:2}}>
-                CMB → SLC baseline: <strong>${fmtN(HIST_RATE,2)}/kg</strong> · Forwarder ATA quote: <strong>$5.77/kg all-in</strong>
+                Invoice baseline for this window: <strong>{fmt(baseline)}/kg</strong> · Forwarder ATA quote: <strong>$5.77/kg all-in</strong>
               </div>
             </div>
             <div style={{textAlign:"right"}}>
@@ -159,49 +187,49 @@ function App() {
               <span style={{fontWeight:600,color:adjCol}}>{slider>0?"+":""}{slider}% vs. baseline</span>
               <span>+50%</span>
             </div>
-            <p style={{fontSize:12,color:"#888",marginTop:10}}>💡 Ask your freight forwarder for a current spot rate, then use the Manual $/kg tab for a precise adjustment. Current ATA quote: $5.77/kg (+16.8% above baseline).</p>
           </>}
 
           {rateMode==="manual" && <>
             <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
               <div style={{position:"relative",flex:"0 0 180px"}}>
                 <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#888",fontWeight:600}}>$</span>
-                <input type="number" step="0.01" min="0" placeholder="e.g. 5.77" value={manRate}
+                <input type="number" step="0.01" min="0" placeholder="e.g. 8.00" value={manRate}
                   onChange={e=>setManRate(e.target.value)}
                   style={{width:"100%",padding:"9px 10px 9px 22px",borderRadius:8,border:"1.5px solid #d0d4e0",fontSize:14,outline:"none"}}/>
               </div>
-              <span style={{fontSize:13,color:"#666"}}>per chargeable kg (USD)</span>
+              <span style={{fontSize:13,color:"#666"}}>per chargeable kg, all-in landed on your invoice</span>
               {manRate&&!isNaN(parseFloat(manRate)) &&
                 <span style={{fontSize:13,fontWeight:600,color:adjCol}}>
-                  {pct>0?"▲ +":pct<0?"▼ ":""}{pct}% vs. ${fmtN(HIST_RATE,2)}/kg baseline
+                  {pct>0?"▲ +":pct<0?"▼ ":""}{pct}% vs. {fmt(baseline)}/kg baseline
                 </span>}
             </div>
-            <p style={{fontSize:12,color:"#888",marginTop:10}}>💡 Current forwarder ATA all-in quote: <strong>$5.77/kg</strong> (+500/1000 weight breaks). Sources: Freightos, Flexport Market Pulse, your forwarder's spot quotes.</p>
+            <p style={{fontSize:12,color:"#888",marginTop:10}}>⚠️ Your baseline is invoice total ÷ chargeable kg, so it includes everything on the invoice. A quoted rate like $5.77/kg may not include all of that, so compare like with like.</p>
           </>}
 
           {isAdj && <div style={{marginTop:12,background:mult>1?"#fff5f0":"#f0fff4",borderRadius:8,padding:"8px 12px",fontSize:12,color:adjCol,fontWeight:500}}>
-            {mult>1?"⚠️":"✅"} All estimates are {Math.abs(pct)}% {mult>1?"above":"below"} your historical baseline.
+            {mult>1?"⚠️":"✅"} All estimates are {Math.abs(pct)}% {mult>1?"above":"below"} the baseline.
           </div>}
         </div>
 
-        {/* Unit Inputs */}
         <div style={card}>
           <h2 style={{fontSize:15,fontWeight:700,color:"#333",marginBottom:16}}>Enter Units by Category</h2>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
             {CATEGORIES.map(cat => {
-              const s = STATS[cat], adjCPU = s.avgCPU * mult;
+              const g = getStats(cat);
+              const cpu = g ? g.s.cpu*mult : 0;
               return (
                 <div key={cat} style={{background:"#f8f9fb",borderRadius:10,padding:14,border:"1.5px solid #e8eaf0"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,gap:6}}>
                     <span style={{fontWeight:600,fontSize:14,color:"#222"}}>{cat}</span>
-                    {s.samples < 3 && <span style={{fontSize:11,background:"#fff3cd",color:"#856404",padding:"2px 7px",borderRadius:20,fontWeight:600}}>Low data ({s.samples} sample{s.samples>1?"s":""})</span>}
+                    {g && g.fallback && <span style={{fontSize:11,background:"#fff3cd",color:"#856404",padding:"2px 7px",borderRadius:20,fontWeight:600}}>All-time data</span>}
+                    {g && !g.fallback && g.s.n<3 && <span style={{fontSize:11,background:"#fff3cd",color:"#856404",padding:"2px 7px",borderRadius:20,fontWeight:600}}>Low data ({g.s.n})</span>}
                   </div>
                   <input type="number" placeholder="Enter units..." value={inputs[cat]}
                     onChange={e=>setInputs(p=>({...p,[cat]:e.target.value}))}
                     style={{width:"100%",padding:"8px 10px",borderRadius:7,border:"1.5px solid #d0d4e0",fontSize:14,outline:"none"}}/>
                   <div style={{fontSize:12,color:"#888",marginTop:7,display:"flex",justifyContent:"space-between"}}>
-                    <span>~{fmtN(s.avgUPC)} units/carton</span>
-                    <span style={{color:isAdj?adjCol:"#888",fontWeight:isAdj?600:400}}>{fmt(adjCPU)}/unit{isAdj?" (adj.)":""}</span>
+                    <span>~{fmtN(g.s.upc)} units/carton</span>
+                    <span style={{color:isAdj?adjCol:"#888",fontWeight:isAdj?600:400}}>{fmt(cpu)}/unit{isAdj?" (adj.)":""}</span>
                   </div>
                 </div>
               );
@@ -209,7 +237,6 @@ function App() {
           </div>
         </div>
 
-        {/* Results */}
         <div style={card}>
           <h2 style={{fontSize:15,fontWeight:700,color:"#333",marginBottom:16}}>Estimated Cost Breakdown</h2>
           {!hasUnits
@@ -223,99 +250,98 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {est.lines.map(({cat,units,base,adj,cartons,kg})=>
+                  {est.lines.filter(l=>l.units>0).map(({cat,units,base,adj,cartons,kg})=>
                     <tr key={cat} style={{borderBottom:"1px solid #f5f5f5"}}>
                       <td style={{padding:"10px",fontWeight:500,color:"#222"}}>{cat}</td>
-                      <td style={{padding:"10px",textAlign:"right",color:units?"#222":"#ccc"}}>{units?units.toLocaleString():"—"}</td>
-                      <td style={{padding:"10px",textAlign:"right",color:units?"#555":"#ccc"}}>{units?cartons.toLocaleString():"—"}</td>
-                      <td style={{padding:"10px",textAlign:"right",color:units?"#555":"#ccc"}}>{units?fmtN(kg)+" kg":"—"}</td>
-                      {isAdj&&<td style={{padding:"10px",textAlign:"right",color:"#bbb",textDecoration:"line-through",fontSize:12}}>{units?fmt(base):"—"}</td>}
-                      <td style={{padding:"10px",textAlign:"right",fontWeight:600,color:units?"#4f46e5":"#ccc"}}>{units?fmt(adj):"—"}</td>
+                      <td style={{padding:"10px",textAlign:"right"}}>{units.toLocaleString()}</td>
+                      <td style={{padding:"10px",textAlign:"right",color:"#555"}}>{cartons.toLocaleString()}</td>
+                      <td style={{padding:"10px",textAlign:"right",color:"#555"}}>{fmtN(kg)} kg</td>
+                      {isAdj&&<td style={{padding:"10px",textAlign:"right",color:"#bbb",textDecoration:"line-through",fontSize:12}}>{fmt(base)}</td>}
+                      <td style={{padding:"10px",textAlign:"right",fontWeight:600,color:"#4f46e5"}}>{fmt(adj)}</td>
                     </tr>)}
                 </tbody>
               </table>
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:14,paddingTop:14,borderTop:"2px solid #f0f0f0",gap:32,alignItems:"flex-end"}}>
                 {isAdj && <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:12,color:"#aaa",marginBottom:2}}>Historical Baseline Total</div>
+                  <div style={{fontSize:12,color:"#aaa",marginBottom:2}}>Baseline Total</div>
                   <div style={{fontSize:18,fontWeight:600,color:"#bbb",textDecoration:"line-through"}}>{fmt(est.baseTotal)}</div>
                 </div>}
                 <div style={{textAlign:"right"}}>
                   <div style={{fontSize:12,color:"#888",marginBottom:2}}>Total Estimated Air Freight Cost</div>
                   <div style={{fontSize:26,fontWeight:800,color:"#4f46e5"}}>{fmt(est.total)}</div>
                   {isAdj && <div style={{fontSize:12,color:adjCol,fontWeight:600,marginTop:2}}>
-                    {rateMode==="manual"?`Based on $${parseFloat(manRate).toFixed(2)}/kg market rate`:`${pct>0?"+":""}${pct}% market adjustment applied`}
+                    {rateMode==="manual"?`Based on $${parseFloat(manRate).toFixed(2)}/kg`:`${pct>0?"+":""}${pct}% adjustment applied`}
                   </div>}
                 </div>
               </div>
-              <p style={{fontSize:11,color:"#bbb",marginTop:12}}>⚠️ Based on 5 historical shipments across 16 data rows. Add more data to improve accuracy.</p>
+              <p style={{fontSize:11,color:"#bbb",marginTop:12}}>⚠️ Smaller shipments run a higher $/kg than large ones (see Historical tab). An order much smaller or larger than your recent shipments will land off these averages.</p>
             </>}
         </div>
       </>}
 
       {/* ── HISTORICAL ── */}
       {tab==="historical" && <div style={card}>
-        <h2 style={{fontSize:15,fontWeight:700,color:"#333",marginBottom:4}}>Historical Averages by Category</h2>
-        <p style={{fontSize:13,color:"#888",marginBottom:6}}>Costs allocated by carton share per shipment, averaged across all available shipments.</p>
-        <p style={{fontSize:13,color:"#555",marginBottom:20}}>Overall historical rate: <strong>${fmtN(HIST_RATE,2)}/chargeable kg</strong> across 5 shipments</p>
+        <h2 style={{fontSize:15,fontWeight:700,color:"#333",marginBottom:4}}>Averages by Category</h2>
+        <p style={{fontSize:13,color:"#888",marginBottom:20}}>Invoice cost split by carton share, then totalled per category for the selected window. Categories with no data in the window show all-time numbers.</p>
 
         <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
           <thead><tr style={{borderBottom:"2px solid #f0f0f0"}}>
-            {["Category","Samples","Avg Units/Carton","Avg Cost/Unit","Avg Cost/Carton","Avg Chg. Kg/Carton"].map(h=>
+            {["Category","Rows","Units/Carton","Cost/Unit","Cost/Carton","Chg. Kg/Carton"].map(h=>
               <th key={h} style={{textAlign:h==="Category"?"left":"right",padding:"6px 10px",color:"#888",fontWeight:600,fontSize:12}}>{h}</th>)}
           </tr></thead>
           <tbody>{CATEGORIES.map(cat=>{
-            const s = STATS[cat];
+            const g = getStats(cat); if(!g) return null; const s = g.s;
             return <tr key={cat} style={{borderBottom:"1px solid #f5f5f5"}}>
-              <td style={{padding:"10px",fontWeight:500}}>{cat}</td>
+              <td style={{padding:"10px",fontWeight:500}}>{cat}{g.fallback && <span style={{marginLeft:8,fontSize:11,background:"#fff3cd",color:"#856404",padding:"2px 7px",borderRadius:20,fontWeight:600}}>all-time</span>}</td>
               <td style={{padding:"10px",textAlign:"right"}}>
-                <span style={{background:s.samples<3?"#fff3cd":"#e8f5e9",color:s.samples<3?"#856404":"#2e7d32",padding:"2px 8px",borderRadius:20,fontWeight:600,fontSize:12}}>{s.samples}</span>
+                <span style={{background:s.n<3?"#fff3cd":"#e8f5e9",color:s.n<3?"#856404":"#2e7d32",padding:"2px 8px",borderRadius:20,fontWeight:600,fontSize:12}}>{s.n}</span>
               </td>
-              <td style={{padding:"10px",textAlign:"right"}}>{fmtN(s.avgUPC)}</td>
-              <td style={{padding:"10px",textAlign:"right",fontWeight:600,color:"#4f46e5"}}>{fmt(s.avgCPU)}</td>
-              <td style={{padding:"10px",textAlign:"right"}}>{fmt(s.avgCPC)}</td>
-              <td style={{padding:"10px",textAlign:"right"}}>{fmtN(s.avgKPC)} kg</td>
+              <td style={{padding:"10px",textAlign:"right"}}>{fmtN(s.upc)}</td>
+              <td style={{padding:"10px",textAlign:"right",fontWeight:600,color:"#4f46e5"}}>{fmt(s.cpu)}</td>
+              <td style={{padding:"10px",textAlign:"right"}}>{fmt(s.cpc)}</td>
+              <td style={{padding:"10px",textAlign:"right"}}>{fmtN(s.kpc)} kg</td>
             </tr>;
           })}</tbody>
         </table>
 
-        <h2 style={{fontSize:15,fontWeight:700,color:"#333",margin:"28px 0 16px"}}>Shipment Detail</h2>
+        <h2 style={{fontSize:15,fontWeight:700,color:"#333",margin:"28px 0 4px"}}>Shipments</h2>
+        <p style={{fontSize:13,color:"#888",marginBottom:14}}>$/kg = invoice total ÷ chargeable kg. Note how it climbs as shipments get smaller.</p>
         <div style={{overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
           <thead><tr style={{borderBottom:"2px solid #f0f0f0"}}>
-            {["Shipment ID","Date","Category","Units","Cartons","Carton Share","Allocated Cost","Allocated Chg. Kg","Cost/Unit"].map(h=>
-              <th key={h} style={{textAlign:["Shipment ID","Date","Category"].includes(h)?"left":"right",padding:"6px 8px",color:"#888",fontWeight:600,whiteSpace:"nowrap"}}>{h}</th>)}
+            {["Shipment","Date","Cartons","Chg. Kg","Invoice","$/kg","Cost/Carton"].map(h=>
+              <th key={h} style={{textAlign:["Shipment","Date"].includes(h)?"left":"right",padding:"6px 8px",color:"#888",fontWeight:600,whiteSpace:"nowrap"}}>{h}</th>)}
           </tr></thead>
-          <tbody>{RAW_DATA.map((r,i)=>{
-            const share = r.cartons/r.totalCartons, ac = r.totalCost*share, ak = r.chargeableKg*share;
-            return <tr key={i} style={{borderBottom:"1px solid #f5f5f5",background:i%2===0?"#fafafa":"#fff"}}>
-              <td style={{padding:"8px",color:"#888",fontSize:11,whiteSpace:"nowrap"}}>{r.shipmentId}</td>
-              <td style={{padding:"8px",color:"#888",fontSize:11,whiteSpace:"nowrap"}}>{r.date}</td>
-              <td style={{padding:"8px",fontWeight:500,whiteSpace:"nowrap"}}>{r.category}</td>
-              <td style={{padding:"8px",textAlign:"right"}}>{r.units.toLocaleString()}</td>
-              <td style={{padding:"8px",textAlign:"right"}}>{r.cartons}</td>
-              <td style={{padding:"8px",textAlign:"right"}}>{(share*100).toFixed(1)}%</td>
-              <td style={{padding:"8px",textAlign:"right",color:"#4f46e5",fontWeight:600}}>{fmt(ac)}</td>
-              <td style={{padding:"8px",textAlign:"right"}}>{fmtN(ak)} kg</td>
-              <td style={{padding:"8px",textAlign:"right"}}>{fmt(ac/r.units)}</td>
+          <tbody>{[...SHIPMENTS].sort((a,b)=>b.date.localeCompare(a.date)).map((s,i)=>{
+            const inWin = s.date>=cutoff;
+            return <tr key={s.id} style={{borderBottom:"1px solid #f5f5f5",background:i%2===0?"#fafafa":"#fff",opacity:inWin?1:0.45}}>
+              <td style={{padding:"8px",color:"#555",whiteSpace:"nowrap"}}>{s.id}</td>
+              <td style={{padding:"8px",color:"#888",whiteSpace:"nowrap"}}>{fmtDate(s.date)}</td>
+              <td style={{padding:"8px",textAlign:"right"}}>{s.cartons}</td>
+              <td style={{padding:"8px",textAlign:"right"}}>{fmtN(s.kg)}</td>
+              <td style={{padding:"8px",textAlign:"right"}}>{fmt(s.cost)}</td>
+              <td style={{padding:"8px",textAlign:"right",fontWeight:600,color:"#4f46e5"}}>{fmt(s.cost/s.kg)}</td>
+              <td style={{padding:"8px",textAlign:"right"}}>{fmt(s.cost/s.cartons)}</td>
             </tr>;
           })}</tbody>
         </table>
         </div>
+        <p style={{fontSize:11,color:"#aaa",marginTop:10}}>Greyed rows fall outside the selected data window.</p>
       </div>}
 
       {/* ── METHODOLOGY ── */}
       {tab==="methodology" && <div style={{...card,lineHeight:1.7,fontSize:14,color:"#444"}}>
         <h2 style={{fontSize:15,fontWeight:700,color:"#333",marginBottom:16}}>How This Estimator Works</h2>
         {[
-          ["1. Cost Allocation by Carton Share","Since invoices are mixed-category, the total shipment cost is split across categories based on each category's proportion of total cartons."],
-          ["2. Chargeable Weight","All shipments used chargeable weight (volumetric > actual), expected for apparel. Chargeable Kg is also allocated by carton share."],
-          ["3. Volumetric Weight Check","Carton dims: 58.5 × 38 × 20.5cm ÷ 6,000 = 7.6 kg/carton. All shipments show chargeable weight well above actual weight, confirming volumetric weight drives costs."],
-          ["4. Historical Baseline Rate",`Overall historical rate = total cost ÷ total chargeable kg across all 5 shipments = $${fmtN(HIST_RATE,2)}/kg. This anchors market adjustments.`],
-          ["5. Forward Estimates","Enter expected units → tool estimates cartons (units ÷ avg units-per-carton), chargeable kg (cartons × avg kg-per-carton), and cost (units × avg cost-per-unit)."],
-          ["6. % Slider Adjustment","Applies a percentage multiplier to all estimates based on how current market rates compare to your historical baseline."],
-          ["7. Manual $/kg Input",`Enter a specific rate per chargeable kg (e.g. forwarder ATA all-in quote of $5.77/kg). Tool computes implied % vs. $${fmtN(HIST_RATE,2)}/kg baseline and scales all estimates.`],
-          ["8. Lane","Sri Lanka (CMB) → SLC. Routing typically via Middle East or Asian hub (DXB, DOH, SIN). Rate sources: Freightos, Flexport Market Pulse, forwarder spot quotes."],
-          ["9. Data","5 shipments, 16 category rows. Bra - Wireless has fewer samples — add more data for higher confidence."],
+          ["1. Cost split by carton share","Invoices are mixed-category, so each shipment's total cost (and chargeable kg) is split across its categories by each category's share of cartons."],
+          ["2. Weighted averages","For each category, cost per unit = total allocated cost ÷ total units across all shipments in the window. Larger shipments carry more weight than tiny ones."],
+          ["3. Data window","Rates moved a lot over the last year, so the default is the last 6 months (measured back from the newest shipment on file). If a category has no data in the window, the tool falls back to all-time and flags it."],
+          ["4. Chargeable weight","Chargeable kg is whichever is greater of actual and volumetric weight (L×W×H cm ÷ 6,000). Carton size is 58.5 × 38 × 20.5 cm, about 7.6 kg volumetric per carton."],
+          ["5. Baseline rate","Invoice total ÷ chargeable kg across shipments in the window. This is an all-in number, so compare it to all-in quotes."],
+          ["6. Forward estimate","Units ÷ units-per-carton gives cartons, cartons × kg-per-carton gives chargeable kg, units × cost-per-unit gives cost."],
+          ["7. Market adjustment","The slider applies a % change to everything. Manual $/kg computes the % difference from the baseline and applies that."],
+          ["8. Shipment size","$/kg is higher on small shipments, so an order far smaller or larger than recent ones can land outside these estimates."],
+          ["9. Updating","Add a line to the SHIPMENTS list at the top of the file: id, date (YYYY-MM-DD), invoice cost, chargeable kg, total cartons, and [category, units, cartons] for each line."],
         ].map(([t,b])=>(
           <div key={t} style={{marginBottom:18}}>
             <div style={{fontWeight:700,color:"#222",marginBottom:4}}>{t}</div>
