@@ -83,6 +83,9 @@ const card = { background:"#fff", borderRadius:12, padding:24, boxShadow:"0 1px 
 const pill = (label,active,onClick) =>
   <button key={label} onClick={onClick} style={{padding:"5px 14px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:600,fontSize:12,background:active?"#4f46e5":"#f0f0f5",color:active?"#fff":"#666"}}>{label}</button>;
 
+const SHOW_HISTORICAL = false;  // set to true to bring the Historical tab back
+const SHOW_METHODOLOGY = false; // set to true to bring the Methodology tab back
+const TABS = ["estimator", ...(SHOW_HISTORICAL ? ["historical"] : []), ...(SHOW_METHODOLOGY ? ["methodology"] : [])];
 const WINDOWS = [{label:"Last 3 months",months:3},{label:"Last 6 months",months:6},{label:"All time",months:0}];
 
 function App() {
@@ -147,9 +150,9 @@ function App() {
         <p style={{color:"#666",fontSize:14,marginTop:4}}>Sri Lanka (CMB) → SLC · {SHIPMENTS.length} shipments on file · latest {fmtDate(LATEST)}</p>
       </div>
 
-      <div style={{display:"flex",gap:8,marginBottom:20,flexWrap:"wrap"}}>
-        {["estimator","historical","methodology"].map(tabBtn)}
-      </div>
+      {TABS.length > 1 && <div style={{display:"flex",gap:8,marginBottom:20,flexWrap:"wrap"}}>
+        {TABS.map(tabBtn)}
+      </div>}
 
       {/* Data window */}
       {tab!=="methodology" && <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16,flexWrap:"wrap"}}>
@@ -274,7 +277,7 @@ function App() {
                   </div>}
                 </div>
               </div>
-              <p style={{fontSize:11,color:"#bbb",marginTop:12}}>⚠️ Smaller shipments run a higher $/kg than large ones (see Historical tab). An order much smaller or larger than your recent shipments will land off these averages.</p>
+              <p style={{fontSize:11,color:"#bbb",marginTop:12}}>⚠️ Smaller shipments run a higher $/kg than large ones. An order much smaller or larger than your recent shipments will land off these averages.</p>
             </>}
         </div>
       </>}
